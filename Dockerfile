@@ -1,0 +1,23 @@
+FROM openjdk:21-jdk-slim
+
+WORKDIR /app
+COPY . .
+
+ENV SPRING_SERVER_PORT=8080
+ENV KAFKA_BOOTSTRAP_URL=localhost:9092
+ENV KAFKA_REQUEST_TOPIC_NAME=ticketRequest
+ENV KAFKA_BOOKING_TOPIC_NAME=ticketBooking
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV KAFKA_CONSUMER_GROUP_ID=ticket-group
+ENV KAFKA_CONSUMER_AUTO_COMMIT=false
+ENV KAFKA_CONSUMER_AUTO_OFFSET=earliest
+ENV KAFKA_LISTENER_ACK_MODE=manual
+ENV REDIS_HOST=localhost
+ENV REDIS_PORT=6342
+
+RUN chmod +x gradlew
+RUN apt update && apt-get install findutils -y
+RUN ./gradlew clean
+RUN ./gradlew build
+
+CMD ["java", "-jar", "build/libs/oliveyoung-be-0.0.1-SNAPSHOT.jar", "-spring.profiles.active=${SPRING_PROFILES_ACTIVE}"]
