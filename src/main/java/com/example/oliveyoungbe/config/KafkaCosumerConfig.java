@@ -14,6 +14,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 
 import java.util.HashMap;
 import java.util.Map;
