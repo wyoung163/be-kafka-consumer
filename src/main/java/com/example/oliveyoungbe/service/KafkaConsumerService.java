@@ -12,6 +12,9 @@ import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 @Service
@@ -25,7 +28,7 @@ public class KafkaConsumerService {
     private static final int MAX_CAPACITY = 100; // 최대 입장 가능 인원
 
     //예매 요청 메시지 소비 (대기열 추가 및 입장 처리)
-    @KafkaListener(topics = "${kafka.topic.typeRequest}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${kafka.topic.typeRequest}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerRequestContainerFactory")
     public void consumeTicketRequest(@Payload TicketRequest ticketRequest,
                                      @Headers MessageHeaders messageHeaders,
                                      Acknowledgment acknowledgment) throws Exception {
@@ -46,7 +49,7 @@ public class KafkaConsumerService {
     }
 
     //예매 완료 메시지 소비 (예약 확정 및 대기열 정리)
-    @KafkaListener(topics = "${kafka.topic.typeBooking}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${kafka.topic.typeBooking}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerBookingContainerFactory")
     public void consumeTicketBooking(@Payload TicketBooking ticketBooking,
                                      @Headers MessageHeaders messageHeaders,
                                      Acknowledgment acknowledgment) throws Exception {
@@ -63,7 +66,9 @@ public class KafkaConsumerService {
     private boolean addToWaitingList(TicketRequest ticketRequest) {
         ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
         String uuid = ticketRequest.getUuid();
-        long timestamp = Long.parseLong(ticketRequest.getTimestamp());
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        LocalDateTime date = LocalDateTime.parse(ticketRequest.getTimestamp(), formatter);
+        long timestamp = date.toEpochSecond(ZoneOffset.UTC);
         if (uuid != null && zSetOperations != null) {
             Boolean success = zSetOperations.add(WAITING_LIST_KEY, uuid, (double) timestamp);
             if (Boolean.TRUE.equals(success)) {
