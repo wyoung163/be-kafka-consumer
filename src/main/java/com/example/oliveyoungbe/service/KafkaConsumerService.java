@@ -120,7 +120,12 @@ public class KafkaConsumerService {
         boolean removedFromEnterList = removeFromEnterList(uuid);
 
         if (removedFromEnterList) {
-            redisTemplate.opsForHash().put(BOOKING_LIST_KEY, ticketBooking.getTimeSlot(), ticketBooking.getUuid());
+            String countStr = (String) redisTemplate.opsForHash().get(BOOKING_LIST_KEY, ticketBooking.getTimeSlot());
+            int cnt = countStr != null ? Integer.parseInt(countStr) + 1 : 1;
+
+            redisTemplate.opsForHash().put(BOOKING_LIST_KEY, ticketBooking.getTimeSlot(), String.valueOf(cnt));
+
+            System.out.println(cnt);
             System.out.println("예매 완료: UUID=" + uuid);
             return true;
         } else {
