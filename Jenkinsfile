@@ -16,7 +16,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    git branch: 'dev', credentialsId: GIT_CREDENTIALS, url: REPO_URL
+                    git branch: 'main', credentialsId: GIT_CREDENTIALS, url: REPO_URL
                 }
             }
         }
