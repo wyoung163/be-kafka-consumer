@@ -9,14 +9,14 @@ pipeline {
         ECR_REPO_NAME = 'server/kafka-consumer'
         ECR_CREDENTIALS = 'aws-ecr-credential'
         SQ_CREDENTIALS = 'sonarqube-credential'
-        SQ_PROJECT_KEY = 'sonarqube-project-key'
+        SQ_PROJECT_KEY = 'sq-kafka-consumer-project-key'
     }
 
     stages {
         stage('Checkout') {
             steps {
                 script {
-                    git branch: 'main', credentialsId: GIT_CREDENTIALS, url: REPO_URL
+                    git branch: 'dev', credentialsId: GIT_CREDENTIALS, url: REPO_URL
                 }
             }
         }
@@ -27,6 +27,7 @@ pipeline {
                     def scannerHome = tool 'sonarqube-scanner';
                     withSonarQubeEnv(credentialsId: SQ_CREDENTIALS, installationName: 'sonarqube') {
                         withCredentials([string(credentialsId: SQ_PROJECT_KEY, variable: 'PROJECT_KEY')]) {
+                        sh 'chmod +x ./gradlew'
                         sh './gradlew build'
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
