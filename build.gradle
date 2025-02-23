@@ -45,5 +45,5 @@ tasks.named('test') {
 }
 
 test {
-    systemProperty 'spring.profiles.active', 'dev'
+    systemProperty 'spring.profiles.active', 'prod'
 }
