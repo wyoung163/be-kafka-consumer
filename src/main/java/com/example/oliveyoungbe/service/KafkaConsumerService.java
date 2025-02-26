@@ -25,7 +25,7 @@ public class KafkaConsumerService {
     private static final String WAITING_LIST_KEY = "waiting_list";
     private static final String ENTER_LIST_KEY = "enter_list";
     private static final String BOOKING_LIST_KEY = "booking_list";
-    private static final int MAX_CAPACITY = 50000; // 최대 입장 가능 인원
+    private static final int MAX_CAPACITY = 5000; // 최대 입장 가능 인원
 
     //예매 요청 메시지 소비 (대기열 추가 및 입장 처리)
     @KafkaListener(topics = "${kafka.topic.typeRequest}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerRequestContainerFactory")
