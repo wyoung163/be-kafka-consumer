@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.sql.Timestamp;
 
-@Data
+@Entity
 public class TicketRequest {
     @Nullable
     private String uuid;

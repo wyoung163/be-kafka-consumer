@@ -1,7 +1,7 @@
 package com.example.oliveyoungbe.service;
 
-import com.example.oliveyoungbe.dto.TicketRequest;
-import com.example.oliveyoungbe.dto.TicketBooking;
+import com.example.oliveyoungbe.dto.TicketRequestDto;
+import com.example.oliveyoungbe.dto.TicketBookingDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -29,7 +29,7 @@ public class KafkaConsumerService {
 
     //예매 요청 메시지 소비 (대기열 추가 및 입장 처리)
     @KafkaListener(topics = "${kafka.topic.typeRequest}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerRequestContainerFactory")
-    public void consumeTicketRequest(@Payload TicketRequest ticketRequest,
+    public void consumeTicketRequest(@Payload TicketRequestDto ticketRequest,
                                      @Headers MessageHeaders messageHeaders,
                                      Acknowledgment acknowledgment) throws Exception {
 
@@ -50,7 +50,7 @@ public class KafkaConsumerService {
 
     //예매 완료 메시지 소비 (예약 확정 및 대기열 정리)
     @KafkaListener(topics = "${kafka.topic.typeBooking}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerBookingContainerFactory")
-    public void consumeTicketBooking(@Payload TicketBooking ticketBooking,
+    public void consumeTicketBooking(@Payload TicketBookingDto ticketBooking,
                                      @Headers MessageHeaders messageHeaders,
                                      Acknowledgment acknowledgment) throws Exception {
         // 예매 확정 및 대기열 정리
@@ -63,7 +63,7 @@ public class KafkaConsumerService {
     }
 
     //대기열에 사용자 추가
-    private boolean addToWaitingList(TicketRequest ticketRequest) {
+    private boolean addToWaitingList(TicketRequestDto ticketRequest) {
         ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
         String uuid = ticketRequest.getUuid();
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
@@ -115,7 +115,7 @@ public class KafkaConsumerService {
     }
 
     // 예매 완료 처리 (예약 확정 및 대기열 정리)
-    private boolean finalizeBooking(TicketBooking ticketBooking) {
+    private boolean finalizeBooking(TicketBookingDto ticketBooking) {
         String uuid = ticketBooking.getUuid();
         boolean removedFromEnterList = removeFromEnterList(uuid);
 
