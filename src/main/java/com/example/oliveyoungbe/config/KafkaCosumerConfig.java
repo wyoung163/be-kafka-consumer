@@ -1,7 +1,7 @@
 package com.example.oliveyoungbe.config;
 
-import com.example.oliveyoungbe.dto.TicketBooking;
-import com.example.oliveyoungbe.dto.TicketRequest;
+import com.example.oliveyoungbe.entity.TicketBooking;
+import com.example.oliveyoungbe.entity.TicketRequest;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
