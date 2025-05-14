@@ -3,6 +3,8 @@ package com.example.oliveyoungbe.service;
 import com.example.oliveyoungbe.dto.TicketRequestDto;
 import com.example.oliveyoungbe.dto.TicketBookingDto;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -27,11 +29,16 @@ public class KafkaConsumerService {
     private static final String BOOKING_LIST_KEY = "booking_list";
     private static final int MAX_CAPACITY = 5000; // 최대 입장 가능 인원
 
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerService.class);
+
     //예매 요청 메시지 소비 (대기열 추가 및 입장 처리)
     @KafkaListener(topics = "${kafka.topic.typeRequest}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerRequestContainerFactory")
     public void consumeTicketRequest(@Payload TicketRequestDto ticketRequest,
                                      @Headers MessageHeaders messageHeaders,
                                      Acknowledgment acknowledgment) throws Exception {
+
+        logger.info("ticket request message: eventId={}, timestamp={}, uuid={}",
+                ticketRequest.getEventId(), ticketRequest.getTimestamp(), ticketRequest.getUuid());
 
         // 대기열 추가
         boolean isSuccess = addToWaitingList(ticketRequest);
@@ -53,6 +60,10 @@ public class KafkaConsumerService {
     public void consumeTicketBooking(@Payload TicketBookingDto ticketBooking,
                                      @Headers MessageHeaders messageHeaders,
                                      Acknowledgment acknowledgment) throws Exception {
+
+        logger.info("ticket booking message: eventId={}, timeSlot = {}, timestamp={}, uuid={}",
+                ticketBooking.getEventId(), ticketBooking.getTimeSlot(), ticketBooking.getTimestamp(), ticketBooking.getUuid());
+
         // 예매 확정 및 대기열 정리
         boolean isSuccess = finalizeBooking(ticketBooking);
         if(!isSuccess) {
@@ -72,10 +83,14 @@ public class KafkaConsumerService {
         if (uuid != null && zSetOperations != null) {
             Boolean success = zSetOperations.add(WAITING_LIST_KEY, uuid, (double) timestamp);
             if (Boolean.TRUE.equals(success)) {
-                System.out.println("대기열 추가: UUID=" + uuid + ", timestamp=" + timestamp);
+                logger.info("waiting list queue: success, eventId={}, timestamp={}, uuid={}",
+                        ticketRequest.getEventId(), ticketRequest.getTimestamp(), ticketRequest.getUuid());
+                //System.out.println("대기열 추가: UUID=" + uuid + ", timestamp=" + timestamp);
                 return true;
             } else {
-                System.out.println("대기열 추가 실패: UUID=" + uuid);
+                logger.info("waiting list queue: failed, eventId={}, timestamp={}, uuid={}",
+                        ticketRequest.getEventId(), ticketRequest.getTimestamp(), ticketRequest.getUuid());
+                //System.out.println("대기열 추가 실패: UUID=" + uuid);
                 return false;
             }
         }
@@ -92,14 +107,17 @@ public class KafkaConsumerService {
             String uuid = firstUser.iterator().next();
             if(removeFromWaitingList(uuid)) {
                 redisTemplate.opsForSet().add(ENTER_LIST_KEY, uuid);
-                System.out.println("입장 완료: UUID=" + uuid);
+                logger.info("entry queue: success, uuid={}", uuid);
+                //System.out.println("입장 완료: UUID=" + uuid);
                 return true;
             } else {
-                System.out.println("입장 처리 실패: UUID=" + uuid);
+                logger.info("entry queue: failed, uuid={}", uuid);
+                //System.out.println("입장 처리 실패: UUID=" + uuid);
                 return false;
             }
         } else {
-            System.out.println("입장 불가: 현재 입장 인원 초과 (" + enterSize + "/" + MAX_CAPACITY + ")");
+            logger.info("entry queue: full");
+            //System.out.println("입장 불가: 현재 입장 인원 초과 (" + enterSize + "/" + MAX_CAPACITY + ")");
             return false;
         }
     }
@@ -125,11 +143,14 @@ public class KafkaConsumerService {
 
             redisTemplate.opsForHash().put(BOOKING_LIST_KEY, ticketBooking.getTimeSlot(), String.valueOf(cnt));
 
-            System.out.println(cnt);
-            System.out.println("예매 완료: UUID=" + uuid);
+            logger.info("ticket booking: success, eventId={}, timeslot={}, timestamp={}, uuid={}",
+                    ticketBooking.getEventId(), ticketBooking.getTimeSlot(), ticketBooking.getTimestamp(), ticketBooking.getUuid());
+            //System.out.println("예매 완료: UUID=" + uuid);
             return true;
         } else {
-            System.out.println("예매 완료 실패: UUID=" + uuid);
+            logger.info("ticket booking: failed, eventId={}, timeslot={}, timestamp={}, uuid={}",
+                    ticketBooking.getEventId(), ticketBooking.getTimeSlot(), ticketBooking.getTimestamp(), ticketBooking.getUuid());
+            //System.out.println("예매 완료 실패: UUID=" + uuid);
             return false;
         }
     }
