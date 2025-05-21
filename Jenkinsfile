@@ -56,7 +56,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def ecrImage = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
+                    def gitCommitHash = sh(script: 'git rev-parse --short=8 HEAD', returnStdout: true).trim()
+                    def ecrImage = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${gitCommitHash}"
                     sh "docker build --cache-from=${ecrImage} -t ${ecrImage} ."
                 }
             }
@@ -65,7 +66,8 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    def ecrImage = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
+                    def gitCommitHash = sh(script: 'git rev-parse --short=8 HEAD', returnStdout: true).trim()
+                    def ecrImage = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${gitCommitHash}"
                     sh "docker push ${ecrImage}"
                 }
             }
