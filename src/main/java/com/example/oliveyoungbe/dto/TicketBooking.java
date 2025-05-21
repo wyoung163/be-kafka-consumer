@@ -1,12 +1,11 @@
-package com.example.oliveyoungbe.entity;
+package com.example.oliveyoungbe.dto;
 
 import jakarta.annotation.Nullable;
 import lombok.Data;
 
-import javax.persistence.Entity;
 import java.sql.Timestamp;
 
-@Entity
+@Data
 public class TicketBooking {
     @Nullable
     private String uuid;
